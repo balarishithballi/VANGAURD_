@@ -1,0 +1,12 @@
+{
+  "event_count": 198899,
+  "tp": 51422,
+  "tn": 147477,
+  "fp": 0,
+  "fn": 0,
+  "false_positive_rate": 0.0,
+  "false_negative_rate": 0.0,
+  "alert_volume": 51422,
+  "ueba_anomaly_count": 2937,
+  "anomaly_per_day": 8.06868131868132
+}

@@ -1,0 +1,2 @@
+event_count,tp,tn,fp,fn,false_positive_rate,false_negative_rate,alert_volume,ueba_anomaly_count,anomaly_per_day
+198899,51422,147477,0,0,0.0,0.0,51422,2937,8.06868131868132

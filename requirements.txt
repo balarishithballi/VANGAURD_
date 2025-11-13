@@ -1,0 +1,23 @@
+pandas
+numpy
+tqdm
+regex
+joblib
+python-dateutil
+catboost
+scikit-learn
+lightgbm==4.3.0 ; platform_machine != "arm64" 
+pyarrow
+matplotlib
+seaborn
+shap
+lime
+streamlit
+sentence-transformers
+transformers
+torch
+fastapi
+uvicorn
+python-evtx
+ujson
+pyyaml

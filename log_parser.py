@@ -8,6 +8,16 @@ from datetime import datetime
 INPUT_DIR = "./logs"
 OUTPUT_FILE = "merged_logs.jsonl"
 
+print("""
+GT-ENABLED VERSION
+This parser now reads logs that include the suffix:
+    "|| gt0"  or  "|| gt1"
+and will extract this as:
+    ground_truth: 0 or 1
+
+All other parsing logic remains unchanged.
+""")
+
 # ---------- Timestamp normalization ----------
 def normalize_timestamp(raw_ts):
     patterns = [
@@ -86,32 +96,61 @@ def detect_type(filename):
         return "usb"
     if "evtx" in name:
         return "evtx"
-    return "syslog"  # default
+    return "syslog"
+
+# ---------- Parse ground truth + log line ----------
+def extract_ground_truth(raw_line):
+    """
+    Extracts:
+        line_without_gt, ground_truth (0 or 1)
+    from: "<raw log> || gt1"
+    """
+    if "|| gt" not in raw_line:
+        return raw_line.strip(), 0
+
+    parts = raw_line.rsplit("||", 1)
+    log_part = parts[0].strip()
+    gt_part = parts[1].strip()
+
+    if gt_part == "gt1":
+        return log_part, 1
+    return log_part, 0
 
 # ---------- Parse each line ----------
 def parse_line(line, log_type, fname):
-    entry = {"source_file": fname, "raw": line.strip()}
+    clean_line, gt = extract_ground_truth(line)
+
+    entry = {
+        "source_file": fname,
+        "raw": clean_line,
+        "ground_truth": gt
+    }
+
     pattern = PATTERNS.get(log_type)
     if not pattern:
         return entry
-    m = pattern.search(line)
+
+    m = pattern.search(clean_line)
     if not m:
         return entry
+
     data = m.groupdict()
     entry.update(data)
+
     if "timestamp" in entry:
         entry["timestamp"] = normalize_timestamp(entry["timestamp"])
+
     entry["event_type"] = log_type
     return entry
 
-# ---------- Walk the /logs directory ----------
+# ---------- Walk logs ----------
 def find_log_files(base_dir=INPUT_DIR):
     for root, _, files in os.walk(base_dir):
         for f in files:
             if f.endswith(".log") or f.endswith(".logs"):
                 yield os.path.join(root, f)
 
-# ---------- Main unify function ----------
+# ---------- Main unify ----------
 def unify_all_logs(input_dir=INPUT_DIR, output_file=OUTPUT_FILE):
     count = 0
     with open(output_file, "w", encoding="utf-8") as out:
@@ -126,7 +165,9 @@ def unify_all_logs(input_dir=INPUT_DIR, output_file=OUTPUT_FILE):
                     json.dump(parsed, out)
                     out.write("\n")
                     count += 1
+
             print(f"[+] Parsed {fname} ({log_type})")
+
     print(f"\n✅ Unified {count:,} log entries → {output_file}")
 
 if __name__ == "__main__":
